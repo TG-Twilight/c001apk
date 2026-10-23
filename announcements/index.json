@@ -1,0 +1,18 @@
+{
+    "schemaVersion":  1,
+    "revision":  1,
+    "announcements":  [
+                          {
+                              "id":  "2026-10-23-test",
+                              "title":  "公告功能测试：欢迎来到 c001apk 小助手",
+                              "summary":  "用于检查 Markdown、展开阅读、未读状态与重复提醒的测试公告。",
+                              "publishedAt":  "2026-10-23T14:08:08Z",
+                              "contentRevision":  1,
+                              "reminderRevision":  1,
+                              "important":  true,
+                              "path":  "2026-10-23-test-1.md",
+                              "sha256":  "62e26e6a164c3cae35cee05ae70d45e3f21b797be8cd90de3f7bd820ae3e1243",
+                              "withdrawn":  false
+                          }
+                      ]
+}
