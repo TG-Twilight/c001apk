@@ -102,6 +102,23 @@ void main() {
         throwsFormatException);
     expect(GStorage.settings.toMap(), corrupt);
   });
+  test('automatic identity reuses the single-slot save path', () async {
+    final before = GStorage.settings.toMap();
+    await GStorage.applySzlmId('DUautoIdent0000000000000000000000001');
+    expect(GStorage.szlmId, 'DUautoIdent0000000000000000000000001');
+    expect(decode(GStorage.xAppDevice),
+        'DUautoIdent0000000000000000000000001; ; ; 02:11:22:33:44:55; TestMaker; TestBrand; TestModel; TestBuild; null');
+    for (final entry in before.entries) {
+      if (entry.key != SettingsBoxKey.xAppDevice &&
+          entry.key != SettingsBoxKey.szlmId) {
+        expect(GStorage.settings.get(entry.key), entry.value);
+      }
+    }
+    await expectLater(
+        GStorage.applySzlmId('0000000000000000000000000000000000'),
+        throwsFormatException);
+    expect(GStorage.szlmId, 'DUautoIdent0000000000000000000000001');
+  });
   test('reset keeps imported identity and uses a consistent desktop profile',
       () async {
     await GStorage.importOfficialDeviceIdentity(

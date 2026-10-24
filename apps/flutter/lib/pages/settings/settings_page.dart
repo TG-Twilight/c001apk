@@ -376,8 +376,8 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
             ExpressiveListSection(children: [
               ListTile(
                 leading: const Icon(Icons.smartphone),
-                title: const Text('导入官方设备标识'),
-                subtitle: const Text('减少重复人机验证 · 获取说明与粘贴识别'),
+                title: const Text('设备标识'),
+                subtitle: const Text('自动获取 · 减少重复人机验证（可手动导入）'),
                 onTap: () => Get.to(() => const DeviceIdentityPage()),
               ),
               ListTile(

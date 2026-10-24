@@ -224,7 +224,17 @@ class GStorage {
   }
 
   static Future<void> importOfficialDeviceIdentity(String text) async {
-    final id = OfficialDeviceIdentity.parse(text);
+    await applySzlmId(OfficialDeviceIdentity.parse(text));
+  }
+
+  /// Applies an already validated identity, either parsed from the official
+  /// clipboard text or obtained by the automatic client. Only the first device
+  /// slot changes; the other eight fields and every setting stay as they are.
+  static Future<void> applySzlmId(String value) async {
+    final id = OfficialDeviceIdentity.validate(value);
+    if (id == null) {
+      throw const FormatException('设备标识为空或格式不正确，未修改设备标识');
+    }
     final fields = _deviceFields();
     fields[0] = id;
     final encoded = await TokenUtils.encodeDevice(fields.join(';'));

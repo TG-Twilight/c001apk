@@ -17,6 +17,7 @@ import 'components/announcement_monitor.dart';
 import 'logic/announcements/app_announcements.dart';
 import 'constants/constants.dart';
 import 'logic/network/request.dart';
+import 'logic/szlm_identity_service.dart';
 import 'pages/webview/captcha_page.dart';
 import 'router/app_pages.dart';
 import 'router/page_transitions.dart';
@@ -59,6 +60,10 @@ void main() async {
   }
 
   await GStorage.init();
+  // An identity that is already stored is reused as-is; only a first run, or
+  // one whose identity was rejected, has to register a device. The call must
+  // not delay the first frame.
+  unawaited(SzlmIdentityService.instance.ensure());
   await AppAnnouncements.initialize();
   HttpOverrides.global = CustomHttpOverrides();
 

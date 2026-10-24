@@ -183,7 +183,7 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                         _feedController.setFeedState(LoadingState.loading());
                         await _feedController.getFeedData();
                       },
-                      child: const Text('导入官方设备标识'),
+                      child: const Text('设备标识设置'),
                     ),
                 ]),
           ]),
@@ -425,7 +425,8 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
           Text(hasReplies ? '评论加载已暂停' : '评论尚未加载'),
           const SizedBox(height: 8),
           const Text(
-            '未导入数盟 ID，加载评论可能需要验证码验证。点击下方按钮后再加载。',
+            '设备标识尚未取得（可能离线或取号失败），加载评论可能需要验证码验证。'
+            '可在设置中自动获取或手动导入后再加载。',
             textAlign: TextAlign.center,
           ),
           if (replyState is Error) ...[

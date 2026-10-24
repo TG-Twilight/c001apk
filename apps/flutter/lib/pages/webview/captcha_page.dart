@@ -96,9 +96,9 @@ window.addEventListener('flutterInAppWebViewPlatformReady',startCaptcha);
               context: context,
               builder: (dialogContext) => AlertDialog(
                 title: const Text('反复出现人机验证？'),
-                content: const Text('可在“我的 → 设置 → 协议与设备”导入官方设备标识。'
-                    '从官方酷安同一页面点击“复制 OAID”5次后，粘贴完整内容即可识别数盟 ID。'
-                    '这是临时方案，仍可能需要正常验证。'),
+                content: const Text('可在“我的 → 设置 → 协议与设备 → 设备标识”里重新自动获取，'
+                    '或从官方酷安同一页面点击“复制 OAID”5次后粘贴完整内容手动导入。'
+                    '重新获取后会经服务端确认，仍可能需要正常验证。'),
                 actions: [
                   TextButton(
                     onPressed: () =>

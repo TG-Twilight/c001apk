@@ -66,6 +66,12 @@ void main() {
   });
   testWidgets('incomplete pasted text cannot overwrite an existing identity',
       (tester) async {
+    // The page now also carries the automatic entry, so the manual fields need
+    // a tall enough viewport to be built.
+    tester.view.physicalSize = const Size(420, 1300);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.runAsync(
         () => GStorage.settings.put(SettingsBoxKey.szlmId, 'keep-existing'));
     await tester.pumpWidget(const MaterialApp(home: DeviceIdentityPage()));

@@ -2,6 +2,41 @@
 
 本项目保留原有 [LICENSE](../LICENSE) 与上游署名。
 
+2026-10-23，设备标识的自动获取 `apps/flutter/lib/utils/szlm_duid_client.dart` 的报文构造、
+编码与响应解密来自 [kongwufang/szlm_res](https://github.com/kongwufang/szlm_res) 发布包
+[v1.0.0](https://github.com/kongwufang/szlm_res/releases/tag/v1.0.0) 中的 `getduid.py`，
+该项目以 MIT 许可发布，版权声明见下。Flutter 侧为独立 Dart 实现（zlib 与 XOR 使用标准库），
+并补上了单飞、冷却、次数上限、失败保留旧值与不落日志的策略；未移植其 Python 采集脚本、
+Frida 钩子或抓包产物。79 字段报文模板取自该公开研究中的测试设备样本，不含账号或用户数据。
+MIT 许可原文：
+
+```text
+MIT License
+
+Copyright (c) 2026 kongwufang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+数字联盟、酷安等名称与协议归各自权利人所有；该端点能否注册、注册频率与有效期由服务端决定，
+本项目不绕过其判定（被判不自洽时直接视为失败）。
+
 2026-10-23，基础 Markdown 显示新增直接依赖
 [`markdown` 7.3.1](https://pub.dev/packages/markdown/versions/7.3.1)，
 由 Dart project authors 以 BSD-3-Clause 许可发布，源码见

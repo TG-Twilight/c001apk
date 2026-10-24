@@ -983,7 +983,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.textContaining('设备需要验证'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, '重试'), findsOneWidget);
-    await tester.tap(find.widgetWithText(TextButton, '导入官方设备标识'));
+    await tester.tap(find.widgetWithText(TextButton, '设备标识设置'));
     await tester.pumpAndSettle();
     expect(find.text('减少重复人机验证'), findsOneWidget);
     expect(GlobalData().isLogin, isFalse);
