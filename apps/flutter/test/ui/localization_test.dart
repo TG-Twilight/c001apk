@@ -62,6 +62,12 @@ int mainSelectedIndex(WidgetTester tester) => tester
 Finder mainBottomNavigation() => find.byWidgetPredicate((widget) =>
     (widget is LiquidNavigationBar && !widget.tabs) || widget is NavigationBar);
 
+Finder mainRail() => find.byWidgetPredicate((widget) =>
+    widget is NavigationRail ||
+    (widget is LiquidNavigationBar &&
+        !widget.tabs &&
+        widget.direction == Axis.vertical));
+
 Finder homeCategory(String label) {
   final glass = find.byKey(const ValueKey('liquid-tabs-surface'));
   return glass.evaluate().isEmpty
@@ -739,23 +745,13 @@ void main() {
     expect(find.text('Home'), findsNothing);
     tester.view.physicalSize = const Size(1400, 900);
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(mainRail(), findsOneWidget);
     expect(mainDestination('主页'), findsOneWidget);
-    expect(
-        tester
-            .widget<NavigationRail>(find.byType(NavigationRail))
-            .selectedIndex,
-        1);
+    expect(mainSelectedIndex(tester), 1);
     expect(find.text('本地关注动态'), findsOneWidget);
-    await tester.tap(find.descendant(
-        of: find.byType(NavigationRail),
-        matching: find.byIcon(Icons.person_outline)));
+    await tester.tap(mainDestination('我的'));
     await tester.pumpAndSettle();
-    expect(
-        tester
-            .widget<NavigationRail>(find.byType(NavigationRail))
-            .selectedIndex,
-        2);
+    expect(mainSelectedIndex(tester), 2);
     expect(find.text('点击登录'), findsOneWidget);
     expect(find.text('粉丝', skipOffstage: false), findsNothing);
     final localCard = find
@@ -1024,9 +1020,9 @@ void main() {
     await tester.ensureVisible(card);
     await tester.pumpAndSettle();
     final firstPosition = tester.getTopLeft(find.byType(FeedCard).at(0));
-    final fourthPosition = tester.getTopLeft(find.byType(FeedCard).at(3));
-    expect(fourthPosition.dy, firstPosition.dy);
-    expect(fourthPosition.dx, greaterThan(firstPosition.dx));
+    final secondPosition = tester.getTopLeft(find.byType(FeedCard).at(1));
+    expect(secondPosition.dy, firstPosition.dy);
+    expect(secondPosition.dx, greaterThan(firstPosition.dx));
     final id = tester.widget<FeedCard>(card).data.id.toString();
     await tester.tap(find.descendant(
         of: card, matching: find.text('可正常阅读的合成正文', findRichText: true)));
@@ -1058,10 +1054,10 @@ void main() {
     GlobalData().isLogin = false;
     await tester.pumpWidget(const C001APKAPP());
     await tester.pumpAndSettle();
-    final rail = find.byType(NavigationRail);
+    final rail = mainRail();
     final bounds = tester.getRect(rail);
-    final home = tester
-        .getRect(find.descendant(of: rail, matching: find.byIcon(Icons.home)));
+    final home = tester.getRect(mainDestination('主页'));
+    expect(bounds.left, greaterThanOrEqualTo(77));
     expect(home.left, greaterThanOrEqualTo(bounds.left));
     expect(home.right, lessThanOrEqualTo(bounds.right));
     await tester.pumpWidget(const SizedBox.shrink());
@@ -1328,7 +1324,7 @@ void main() {
     }
     tester.view.physicalSize = const Size(1400, 900);
     await tester.pumpAndSettle();
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(mainRail(), findsOneWidget);
     await tester.tap(find.byTooltip('切换关注内容'));
     await tester.pumpAndSettle();
     await tester.tap(
@@ -1436,8 +1432,11 @@ void main() {
     await tester.drag(scroll, const Offset(0, 180));
     await tester.pumpAndSettle();
     expect(publish, findsOneWidget);
-    expect(find.descendant(of: find.byType(NavigationRail), matching: publish),
+    expect(
+        find.descendant(
+            of: find.byType(AdaptiveMainScaffold), matching: publish),
         findsOneWidget);
+    expect(tester.getRect(publish).right, lessThanOrEqualTo(144));
     expect(tester.getRect(publish).bottom, greaterThan(700));
     expect(tester.state<ScrollableState>(scroll).position, same(position));
     await tester.tap(publish);

@@ -485,7 +485,9 @@ void main() {
     await tester.tap(find.text('动态 0'));
     await tester.pumpAndSettle();
     expect(find.text('详情 0'), findsOneWidget);
-    expect(find.text('动态 0').hitTestable(), findsNothing);
+    expect(find.text('动态 0').hitTestable(), findsOneWidget);
+    expect(tester.getTopLeft(find.text('动态 0')).dx,
+        greaterThan(tester.getTopLeft(find.text('详情 0')).dx));
     await tester.pageBack();
     await resize(tester, 400, height: 760);
     await tester.tap(find.text('动态 0'));
@@ -493,8 +495,7 @@ void main() {
     expect(find.text('独立详情'), findsOneWidget);
   });
 
-  testWidgets(
-      'automatic mode centers portrait tablet details and hides a cramped feed',
+  testWidgets('automatic mode fits both panes on a portrait tablet',
       (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -503,7 +504,9 @@ void main() {
     await tester.tap(find.text('动态 0'));
     await tester.pumpAndSettle();
     expect(find.text('详情 0'), findsOneWidget);
-    expect(find.text('动态 0').hitTestable(), findsNothing);
+    expect(find.text('动态 0').hitTestable(), findsOneWidget);
+    expect(tester.getTopLeft(find.text('动态 0')).dx,
+        greaterThan(tester.getTopLeft(find.text('详情 0')).dx));
   });
 
   for (final mode in [ReadingMode.automatic, ReadingMode.disabled]) {

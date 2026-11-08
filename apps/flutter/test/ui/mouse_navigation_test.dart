@@ -244,7 +244,12 @@ void main() {
     count.value = 60;
     await tester.pumpAndSettle();
     expect(
-        tester.state<ScrollableState>(find.byType(Scrollable)).position.pixels,
+        tester
+            .state<ScrollableState>(find.descendant(
+                of: find.byKey(const ValueKey('new-article')),
+                matching: find.byType(Scrollable)))
+            .position
+            .pixels,
         0);
     await tester.pumpWidget(const SizedBox.shrink());
   });
