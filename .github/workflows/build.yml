@@ -356,7 +356,7 @@ jobs:
     name: iOS arm64 unsigned IPA
     if: github.event_name == 'workflow_dispatch' && inputs.ios
     needs: checks
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
