@@ -12,80 +12,98 @@
 ![Platforms](https://img.shields.io/badge/平台-Android%20%7C%20Windows-486B78?style=flat-square)
 ![Status](https://img.shields.io/badge/状态-持续维护中-6E8B74?style=flat-square)
 
-[下载](https://github.com/TG-Twilight/c001apk/releases) · [反馈问题](https://github.com/TG-Twilight/c001apk/issues) · [参与开发](docs/DEVELOPMENT.md)
+[下载最新版](https://github.com/TG-Twilight/c001apk/releases/latest) · [反馈问题](https://github.com/TG-Twilight/c001apk/issues) · [参与开发](docs/DEVELOPMENT.md)
 
 </div>
 
 ## 关于
 
-基于 [c001apk-flutter](https://github.com/bggRGjQaUbCoE/c001apk-flutter) 继续维护，修复 API、完善中文体验，让日常浏览保持轻巧。
+基于 [c001apk-flutter](https://github.com/bggRGjQaUbCoE/c001apk-flutter) 持续维护的非官方酷安客户端，重点支持 Android 与 Windows。在轻量、简体中文的浏览体验上，加入 HDR／Live 实况、液态玻璃、大屏阅读和本地内容过滤。
 
-<table align="center">
-  <thead>
-    <tr>
-      <th align="center">浏览内容</th>
-      <th align="center">找到兴趣</th>
-      <th align="center">按你的习惯</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center">动态、文章、评论、用户空间</td>
-      <td align="center">动态、应用、用户、话题与内容搜索</td>
-      <td align="center">明暗主题、字体大小</td>
-    </tr>
-    <tr>
-      <td align="center">图文详情与图片查看</td>
-      <td align="center">应用、话题及产品详情</td>
-      <td align="center">本地收藏与屏蔽、浏览历史</td>
-    </tr>
-  </tbody>
-</table>
+## 特色功能
 
-## 界面预览（2026-10-16，1.2.5-release）
+在轻量浏览之外，我们也在持续打磨看图、阅读和内容筛选的体验。
+
+| 功能 | 你可以用它做什么 |
+| --- | --- |
+| **HDR 图片** | 在支持的设备与显示条件下查看 HDR 高光；不支持 HDR 时加载高清 SDR。支持保存原件，也可开启“我不想看HDR”，让静态大图始终使用高清 SDR。 |
+| **Live 实况图片** | 在大图中播放实况，支持自动播放一次、手动循环播放，以及实况原件保存。 |
+| **液态玻璃** | 顶部分类、悬浮导航、搜索和菜单随背后内容呈现折射与色散，提供低／中／高／完全四档，也可关闭。 |
+| **悄悄关注** | 将感兴趣的用户加入本机名单、集中浏览动态，无需向账号发起关注操作；游客也可使用本地关注。 |
+| **帖子／文章保存** | 将正文、作者、来源及部分评论导出为 Markdown 或离线 HTML；HTML 可将图片内嵌到同一个文件，方便离线阅读与归档。 |
+| **屏蔽傻逼内容** | 按自己的浏览偏好减少低俗内容打扰。提供标准／严格两档、话题与作者名单、文本规则、个人规则及订阅更新；列表静默过滤，支持例外与临时查看。默认关闭，仅影响本机展示。 |
+| **桌面与大屏阅读** | 信息流随窗口宽度切换一至四列，阅读时正文居中，右侧可继续浏览；支持实时缩窗、独立滚动、键盘操作与鼠标前进／后退侧键。 |
+
+同时保留动态／文章／评论浏览、内容搜索、多账号、游客模式、本地收藏与浏览历史，以及明暗主题、阅读字号和主页分类自定义。
+
+## 界面预览
+
+Android · M3E 标准界面（1.5.2，2026-11-08）
 
 <p align="center">
-  <img src="docs/media/screenshots/android-home-1.2.5.avif" width="31%" alt="Android 首页：动态列表与主页、关注、我的导航">
-  <img src="docs/media/screenshots/android-article-1.2.5.avif" width="31%" alt="Android 图文详情：文章封面与正文">
-  <img src="docs/media/screenshots/android-settings-1.2.5.avif" width="31%" alt="Android 分类设置：外观、关注、隐私、存储与账号管理">
+  <img src="docs/media/screenshots/android-home-1.5.2.avif" width="31%" alt="Android M3E 首页：标准顶部分类、动态列表与底部导航，关闭悬浮控件">
+  <img src="docs/media/screenshots/android-article-1.5.2.avif" width="31%" alt="Android M3E 图文详情：封面、正文与图片">
+  <img src="docs/media/screenshots/android-settings-1.5.2.avif" width="31%" alt="Android M3E 分类设置：外观、关注、隐私、存储与账号管理">
 </p>
 <p align="center"><sub>Android · 首页 / 图文详情 / 分类设置</sub></p>
 
-<p align="center">
-  <img src="docs/media/screenshots/windows-home-1.2.5.avif" width="96%" alt="Windows 桌面端首页：侧边导航与宽屏内容区域">
-</p>
-<p align="center"><sub>Windows · 桌面端首页</sub></p>
+<details>
+<summary>Android · 开启液态玻璃（1.5.2，点击展开）</summary>
 
 <p align="center">
-  <img src="docs/media/screenshots/windows-settings-1.2.5.avif" width="96%" alt="Windows 分类设置：宽窗口下并排显示分类与外观选项">
+  <img src="docs/media/screenshots/android-liquid-glass-1.5.2.avif" width="45%" alt="Android 深色主题下开启液态玻璃：顶部分类栏与底部悬浮导航折射背后的图片内容">
+  <img src="docs/media/screenshots/android-liquid-glass-follow-1.5.2.avif" width="45%" alt="Android 关注页液态玻璃：用户关注分类、搜索按钮与底部悬浮导航折射背后的内容">
+</p>
+<p align="center"><sub>Android · 液态玻璃：首页 / 关注 · 2026-11-08</sub></p>
+
+</details>
+
+Windows · 1.5.2（2026-11-08）
+
+<p align="center">
+  <img src="docs/media/screenshots/windows-home-1.5.2.avif" width="96%" alt="Windows 桌面端首页：液态玻璃悬浮侧栏、顶部分类与三列信息流">
+</p>
+<p align="center"><sub>Windows · 悬浮导航与三列信息流</sub></p>
+
+<p align="center">
+  <img src="docs/media/screenshots/windows-reading-1.5.2.avif" width="96%" alt="Windows 大屏阅读：居中正文、右侧作者卡与继续浏览信息流">
+</p>
+<p align="center"><sub>Windows · 居中阅读与右侧继续浏览</sub></p>
+
+<p align="center">
+  <img src="docs/media/screenshots/windows-settings-1.5.2.avif" width="96%" alt="Windows 分类设置：左侧分类与右侧外观、悬浮控件及液态玻璃选项">
 </p>
 <p align="center"><sub>Windows · 分类设置与宽窗口布局</sub></p>
 
 ## 下载安装
 
-正式安装包可从 [Releases](https://github.com/TG-Twilight/c001apk/releases) 获取，也可以参照 [开发指南](docs/DEVELOPMENT.md) 自行构建。
+从本仓库 [Releases](https://github.com/TG-Twilight/c001apk/releases/latest) 下载官方完整版。本次 README 对应 **1.5.2**，更新内容见 [发行说明](https://github.com/TG-Twilight/c001apk/releases/tag/1.5.2-release)。
+
+| 平台 | 安装包与支持情况 |
+| --- | --- |
+| **Android** | 提供 arm64-v8a、armeabi-v7a、x86_64，最低 Android 7.0；多数近年的手机选择 arm64-v8a。 |
+| **Windows** | 提供 x86_64 压缩包，解压完整目录后运行 `c001apk.exe`，请保留同目录的 DLL 与 data 文件夹。 |
+| **Linux** | 提供 x86_64 构建产物，运行体验仍待验收。 |
+| **iOS** | 提供 arm64 未签名 IPA，需自行签名后安装，运行体验仍待验收。 |
+
+自行构建请参照 [开发指南](docs/DEVELOPMENT.md)。
 
 云端构建包可从 [Actions](https://github.com/TG-Twilight/c001apk/actions/workflows/build.yml) 的 Artifacts 下载，平台、签名与手动构建方式见 [云端构建指南](docs/CI.md)。
 
-反复遇到人机验证时，可参照 [从官方酷安导入设备标识](docs/DEVICE_ID_IMPORT.md)。自动识别入口需要包含此功能的新版本，不会自动加入旧发行包。
+反复遇到人机验证时，可在引导或设备设置中主动获取数盟 ID，也可参照 [从官方酷安导入设备标识](docs/DEVICE_ID_IMPORT.md) 手动导入。不会在启动或回到前台时自动取号；获取或导入设备标识不保证永久免验证。
 
-## 开发进度
+## 使用说明
 
-- [x] 更新公共 API 请求协议、签名与错误处理。
-- [x] 完成现有 Flutter 界面的一轮简体中文汉化。
-- [x] 恢复主要游客浏览流程，为部分受限动态、文章提供公开详情回退。
-- [x] 基本修复账号登录与状态管理，补齐验证码交互。
-- [x] 本地关注与悄悄关注、多账号管理及游客模式切换。
-- [x] 主导航与分类设置调整，新增 c001apk 自身更新检测。
-- [x] 修复评论完成验证后仍无法加载，更新检测改为每次冷启动检查一次。
-- [ ] 继续完善验证码放行与部分账号操作。
-- 继续维护现有 Flutter，优先 Android 与 Windows，见 [当前维护方向](docs/PROJECT_DIRECTION.md)。
-- [ ] 完善 Flutter 桌面端随窗口尺寸变化的自适应布局与图片保存。
+- **悄悄关注**：在设置中开启后，长按用户主页的关注按钮即可添加。名单仅保存在本机，不会自动同步到账号。
+- **保存帖子／文章**：在详情页点击“保存内容”，选择 Markdown 或离线 HTML。保存包含最多三条一级评论，不包含全量评论、楼中楼或视频；图片下载失败时会提示确认。
+- **内容过滤**：在“设置 → 浏览与隐私 → 屏蔽傻逼内容”中开启。标准档较温和，严格档包含标准规则、过滤更强，误杀可能更多；可调整分类、添加个人规则或临时查看。不会调用账号拉黑或举报接口。
+- **液态玻璃**：在“设置 → 外观与字号”中开启悬浮控件与液态玻璃，并选择档位。
+- **HDR 与实况**：“我不想看HDR”只改变静态大图的显示策略，保留实况播放、缩略图素材标识和原件保存。
 
-当前重点维护 **Android 与 Windows**，代码仍为 Flutter。Android 包名为 `app.awavenue.c001apk`；Linux 已通过云端 release 构建，iOS `arm64` 未签名 IPA 已随 [1.2.6-release](https://github.com/TG-Twilight/c001apk/releases/tag/1.2.6-release) 提供，安装前需自行签名。Linux / iOS 运行体验仍待验收。新包与旧包独立安装，登录及本地数据不会自动迁移。
+Android 包名为 `app.awavenue.c001apk`。与其他包名的客户端独立安装，账号及本地数据不会自动迁移。
 
 > [!NOTE]
-> 部分内容仍受登录、验证码和服务端接口限制，验证码放行与部分账号操作仍需继续完善。Windows 暂不支持应用内直接保存图片，可在浏览器中打开后保存。
+> 部分内容仍受登录、验证码和服务端接口限制，验证码放行与部分账号操作仍需继续完善。
 
 ## 参与与致谢
 
