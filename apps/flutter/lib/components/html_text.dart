@@ -13,6 +13,7 @@ import 'imageview.dart';
 Widget htmlText(
   String html, {
   double fontSize = 15,
+  double lineHeight = 1.5,
   bool isBold = false,
   List<String>? picArr,
   List<FeedMedia>? mediaItems,
@@ -71,7 +72,7 @@ Widget htmlText(
             },
             textStyle: TextStyle(
               fontSize: fontSize,
-              height: 1.5,
+              height: lineHeight,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
             ),
             customStylesBuilder: (element) {

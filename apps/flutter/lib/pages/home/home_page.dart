@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../components/mouse_drag_scroll.dart';
+import '../../components/feed_navigation.dart';
 import '../../components/liquid_top_bar.dart';
 import '../../components/liquid_navigation_bar.dart';
 import '../../utils/storage_util.dart';
@@ -33,6 +34,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  final _bodyKey = GlobalKey();
   late TabController _tabController;
   StreamSubscription<int>? _returnTopSubscription;
   final ReturnTopController _pageScrollController =
@@ -130,6 +132,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final body = KeyedSubtree(
+        key: _bodyKey,
+        child: TabBarView(controller: _tabController, children: _pages));
+    // Reparent the keyed body so the original controllers and scroll positions
+    // survive removing the home toolbar from the reading supplement.
+    if (FeedNavigation.compactOf(context)) return Material(child: body);
     return LiquidTopBarScaffold(
       actions: [
         IconButton(
@@ -148,22 +156,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             onPressed: _editTabs,
             child: const Icon(Icons.tune)),
       ],
-      glassTitle: (context) => AnimatedBuilder(
-        animation: _tabController,
-        builder: (context, _) => LiquidNavigationBar.tabs(
-          key: ValueKey(_tabTypes.map((tab) => tab.storageId).join(',')),
-          selectedIndex: _tabController.index,
-          labels: _tabTypes.map((type) => type.label).toList(),
-          level: GStorage.liquidGlassLevel,
-          onDestinationSelected: (index) {
-            if (_tabController.index == index) {
-              scrollToTop(index);
-            } else {
-              _tabController.animateTo(index);
-            }
-          },
-        ),
-      ),
+      glassTitle: (context) => SizedBox(
+          width: _tabTypes.length *
+                  (MediaQuery.textScalerOf(context).scale(14) * 2 + 28) +
+              8,
+          child: AnimatedBuilder(
+            animation: _tabController,
+            builder: (context, _) => LiquidNavigationBar.tabs(
+              key: ValueKey(_tabTypes.map((tab) => tab.storageId).join(',')),
+              selectedIndex: _tabController.index,
+              labels: _tabTypes.map((type) => type.label).toList(),
+              level: GStorage.liquidGlassLevel,
+              onDestinationSelected: (index) {
+                if (_tabController.index == index) {
+                  scrollToTop(index);
+                } else {
+                  _tabController.animateTo(index);
+                }
+              },
+            ),
+          )),
       title: MouseDragScroll(
         child: TabBar(
           controller: _tabController,
@@ -183,7 +195,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ),
       ),
       onSearch: () => Get.toNamed('/search'),
-      body: TabBarView(controller: _tabController, children: _pages),
+      body: body,
     );
   }
 }

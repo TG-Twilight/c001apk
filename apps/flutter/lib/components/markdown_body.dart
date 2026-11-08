@@ -17,6 +17,7 @@ class FeedText extends StatelessWidget {
   const FeedText(this.source,
       {super.key,
       this.fontSize = 16,
+      this.lineHeight = 1.5,
       this.preview = false,
       this.forcePlain = false,
       this.picArr,
@@ -26,6 +27,7 @@ class FeedText extends StatelessWidget {
 
   final String source;
   final double fontSize;
+  final double lineHeight;
   final bool preview;
   final bool forcePlain;
   final List<String>? picArr;
@@ -37,13 +39,14 @@ class FeedText extends StatelessWidget {
   Widget build(BuildContext context) {
     if (forcePlain) {
       return SelectableText(source,
-          style: TextStyle(fontSize: fontSize, height: 1.5));
+          style: TextStyle(fontSize: fontSize, height: lineHeight));
     }
     final content =
         MarkdownContent.parse(source, showEmoji: GStorage.showEmoji);
     if (!content.isMarkdown) {
       return htmlText(source,
           fontSize: fontSize,
+          lineHeight: lineHeight,
           picArr: picArr,
           mediaItems: mediaItems,
           contentId: contentId,
@@ -58,6 +61,7 @@ class FeedText extends StatelessWidget {
     return MarkdownBody(
         content: content,
         fontSize: fontSize,
+        lineHeight: lineHeight,
         picArr: picArr,
         mediaItems: mediaItems,
         contentId: contentId,
@@ -70,6 +74,7 @@ class MarkdownBody extends StatelessWidget {
       {super.key,
       required this.content,
       this.fontSize = 16,
+      this.lineHeight = 1.5,
       this.baseUrl,
       this.picArr,
       this.mediaItems,
@@ -79,6 +84,7 @@ class MarkdownBody extends StatelessWidget {
 
   final MarkdownContent content;
   final double fontSize;
+  final double lineHeight;
   final Uri? baseUrl;
   final List<String>? picArr;
   final List<FeedMedia>? mediaItems;
@@ -90,7 +96,7 @@ class MarkdownBody extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!content.isMarkdown) {
       return SelectableText(content.source,
-          style: TextStyle(fontSize: fontSize, height: 1.5));
+          style: TextStyle(fontSize: fontSize, height: lineHeight));
     }
     final colors = Theme.of(context).colorScheme;
     final effectiveBase = baseUrl ?? Uri.parse('https://www.coolapk.com/');
@@ -214,7 +220,7 @@ class MarkdownBody extends StatelessWidget {
     return HtmlWidget(content.html,
         baseUrl: effectiveBase,
         rebuildTriggers: [colors, MediaQuery.textScalerOf(context)],
-        textStyle: TextStyle(fontSize: fontSize, height: 1.5),
+        textStyle: TextStyle(fontSize: fontSize, height: lineHeight),
         customStylesBuilder: styles,
         customWidgetBuilder: custom,
         onTapUrl: open);

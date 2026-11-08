@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'feed_navigation.dart';
 import 'keyboard_scroll_region.dart';
 import 'app_navigation_history.dart';
+import 'reading_presentation.dart';
 
 enum ReadingMode { automatic, enabled, disabled }
 
@@ -45,6 +46,7 @@ class AdaptiveReadingPaneState extends State<AdaptiveReadingPane> {
   final _detailKeys = <String, GlobalKey>{};
   final _savedOffsets = <String, List<double>>{};
   final _scheduledRestores = <String>{};
+  final _supplements = <String, Widget>{};
   int _cursor = -1;
   AppNavigationHistory? _navigationHistory;
   ModalRoute<dynamic>? _route;
@@ -131,6 +133,7 @@ class AdaptiveReadingPaneState extends State<AdaptiveReadingPane> {
         _details.removeWhere((id, _) => !_trail.contains(id));
         _detailKeys.removeWhere((id, _) => !_trail.contains(id));
         _savedOffsets.removeWhere((id, _) => !_trail.contains(id));
+        _supplements.removeWhere((id, _) => !_trail.contains(id));
       });
     }
   }
@@ -177,6 +180,7 @@ class AdaptiveReadingPaneState extends State<AdaptiveReadingPane> {
       _details.removeWhere((id, _) => !_trail.contains(id));
       _detailKeys.removeWhere((id, _) => !_trail.contains(id));
       _savedOffsets.removeWhere((id, _) => !_trail.contains(id));
+      _supplements.removeWhere((id, _) => !_trail.contains(id));
       _ensureDetail(id);
     });
     _ensureHistory();
@@ -198,6 +202,7 @@ class AdaptiveReadingPaneState extends State<AdaptiveReadingPane> {
       _details.clear();
       _detailKeys.clear();
       _savedOffsets.clear();
+      _supplements.clear();
     });
   }
 
@@ -222,17 +227,32 @@ class AdaptiveReadingPaneState extends State<AdaptiveReadingPane> {
         _canSplit = widget.mode != ReadingMode.disabled &&
             width >= minimumWidth * scale;
         final reading = _selectedId != null;
-        final detailWidth = width < 720 * scale
+        var detailWidth = width < 720 * scale
             ? width
-            : (680.0 * scale).clamp(680.0, 760.0).clamp(0.0, width);
+            : (700.0 * scale).clamp(680.0, 760.0).clamp(0.0, width);
         // Account for the navigation rail so the article follows the window's
         // center, rather than the center of the space left by the sidebar.
-        final detailLeft = ((width - widget.leadingInset - detailWidth) / 2)
+        var detailLeft = ((width - widget.leadingInset - detailWidth) / 2)
             .clamp(0.0, width - detailWidth);
-        final sidebarLeft = detailLeft + detailWidth + 16;
-        final sidebarWidth = (width - sidebarLeft - 16).clamp(0.0, 300.0);
-        final sidebarFits = width >= 720 * scale && sidebarWidth >= 260;
+        // On tablet landscape, centering can leave too little space on the
+        // right even though both panes fit across the available width.
+        // Preserve centered reading on larger windows; otherwise use the left
+        // margin first, then shorten the article only as much as necessary.
+        if (_canSplit &&
+            constraints.maxHeight >= 320 * scale &&
+            width - detailLeft - detailWidth - 20 < 260) {
+          detailWidth = detailWidth.clamp(0.0, width - 280);
+          detailLeft = (width - detailWidth - 280).clamp(0.0, detailLeft);
+        }
+        final sidebarLeft = detailLeft + detailWidth + 12;
+        final sidebarWidth = (width - sidebarLeft - 8).clamp(0.0, 300.0);
+        final sidebarFits = width >= 720 * scale &&
+            sidebarWidth >= 260 &&
+            constraints.maxHeight >= 320 * scale;
         final showSidebar = reading && sidebarFits && _sidebarVisible;
+        final supplement = _supplements[_selectedId];
+        final supplementHeight = supplement == null ? 0.0 : 96.0 * scale;
+        final sidebarHeaderHeight = 72.0 * scale;
         // LocalHistoryEntry alone does not notify Flutter 3.24's native back
         // bridge. PopScope keeps Android back inside the app while reading.
         return PopScope(
@@ -246,7 +266,9 @@ class AdaptiveReadingPaneState extends State<AdaptiveReadingPane> {
                   Positioned.fill(
                     left: showSidebar ? sidebarLeft : 0,
                     right: showSidebar ? width - sidebarLeft - sidebarWidth : 0,
-                    top: showSidebar ? 48 : 0,
+                    top: showSidebar
+                        ? supplementHeight + sidebarHeaderHeight
+                        : 0,
                     child: Offstage(
                       offstage: reading && !showSidebar,
                       child: FeedNavigation(
@@ -277,6 +299,12 @@ class AdaptiveReadingPaneState extends State<AdaptiveReadingPane> {
                                   excluding: entry.key != _selectedId,
                                   child: ClipRect(
                                       child: Material(
+                                    shape: Border.symmetric(
+                                        vertical: BorderSide(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .outlineVariant
+                                                .withValues(alpha: .5))),
                                     child: KeyboardScrollRegion(
                                         autofocus: entry.key == _selectedId,
                                         child: FeedNavigation(
@@ -288,20 +316,53 @@ class AdaptiveReadingPaneState extends State<AdaptiveReadingPane> {
                                                   _restoreDetail(entry.key);
                                                   return false;
                                                 },
-                                                child: entry.value))),
+                                                child: NotificationListener<
+                                                        ReadingSupplement>(
+                                                    onNotification: (notice) {
+                                                      if (_trail.contains(
+                                                          notice.id)) {
+                                                        setState(() =>
+                                                            _supplements[
+                                                                    notice.id] =
+                                                                notice.child);
+                                                      }
+                                                      return true;
+                                                    },
+                                                    child: entry.value)))),
                                   ))))),
                     ),
                   if (showSidebar)
+                    if (supplement != null)
+                      Positioned(
+                        top: 12,
+                        left: sidebarLeft,
+                        width: sidebarWidth,
+                        height: supplementHeight,
+                        child: supplement,
+                      ),
+                  if (showSidebar)
                     Positioned(
-                        top: 0,
-                        height: 48,
+                        top: supplementHeight,
+                        height: sidebarHeaderHeight,
                         left: sidebarLeft,
                         width: sidebarWidth,
                         child: Row(children: [
                           const Expanded(
                               child: Padding(
                             padding: EdgeInsets.only(left: 12),
-                            child: Text('继续浏览'),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('继续浏览',
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w700)),
+                                SizedBox(height: 4),
+                                Text('回到感兴趣的动态',
+                                    style: TextStyle(fontSize: 12)),
+                              ],
+                            ),
                           )),
                           IconButton(
                             tooltip: '收起信息流',
@@ -338,7 +399,7 @@ class ReadingContentFrame extends StatelessWidget {
       child: Center(
           child: ConstrainedBox(
         constraints:
-            BoxConstraints(maxWidth: (680 * scale).clamp(680.0, 760.0)),
+            BoxConstraints(maxWidth: (700 * scale).clamp(680.0, 760.0)),
         child: child,
       )),
     );

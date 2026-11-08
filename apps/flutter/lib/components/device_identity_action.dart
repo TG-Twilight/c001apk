@@ -127,7 +127,7 @@ class _DeviceIdentityActionState extends State<DeviceIdentityAction> {
               label: Text(_service.isFetching
                   ? '正在获取…'
                   : hasIdentity
-                      ? '获取新的数盟 ID'
+                      ? '重新获取数盟 ID'
                       : '获取数盟 ID'),
             ),
             if (_message != null) ...[

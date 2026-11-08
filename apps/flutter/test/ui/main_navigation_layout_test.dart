@@ -160,7 +160,11 @@ void main() {
   testWidgets('Windows glass preferences and width changes preserve the feed',
       (tester) async {
     await mount(tester, platform: TargetPlatform.windows, width: 1280);
-    expect(find.byType(NavigationRail), findsOneWidget);
+    expect(
+        tester
+            .widget<LiquidNavigationBar>(find.byType(LiquidNavigationBar))
+            .direction,
+        Axis.vertical);
     await tester.drag(find.byType(ListView), const Offset(0, -400));
     await tester.pumpAndSettle();
     final scroll =
@@ -188,14 +192,52 @@ void main() {
     final offset = scroll.pixels;
     await tester.binding.setSurfaceSize(const Size(900, 800));
     await tester.pumpAndSettle();
-    expect(find.byType(NavigationRail), findsOneWidget);
-    expect(find.byType(LiquidNavigationBar), findsNothing);
+    expect(
+        tester
+            .widget<LiquidNavigationBar>(find.byType(LiquidNavigationBar))
+            .direction,
+        Axis.vertical);
     expect(
         identical(
             tester.state<ScrollableState>(find.byType(Scrollable)).position,
             scroll),
         isTrue);
     expect(scroll.pixels, closeTo(offset, 1));
+  });
+
+  testWidgets('wide floating navigation is centered and selects vertically',
+      (tester) async {
+    final selections = <int>[];
+    await mount(tester,
+        width: 1280,
+        platform: TargetPlatform.windows,
+        onSelected: selections.add);
+    final surface = find.byKey(const ValueKey('liquid-drag-surface'));
+    final rect = tester.getRect(surface);
+    expect(rect.center.dx, closeTo(72, 1));
+    expect(rect.center.dy, closeTo(400, 1));
+    expect(rect.height, greaterThan(rect.width));
+    await tester.dragFrom(
+        Offset(rect.center.dx, rect.top + 35), const Offset(0, 175));
+    await tester.pumpAndSettle();
+    expect(selections.last, 2);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'wide standard navigation remains centered when floating is disabled',
+      (tester) async {
+    await tester.runAsync(() => GStorage.settings.put(SettingsBoxKey.floatingNavigation, false));
+    await mount(tester, width: 1280);
+    final top = tester.getRect(find.text('主页')).top;
+    final bottom = tester.getRect(find.text('我的')).bottom;
+    expect((top + bottom) / 2, closeTo(400, 40));
+    expect(
+        tester
+            .widget<NavigationRail>(find.byType(NavigationRail))
+            .groupAlignment,
+        0);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('style preference changes keep the mounted feed and its offset',

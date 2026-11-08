@@ -11,12 +11,14 @@ class SzlmIdentityService extends ChangeNotifier {
       {Box<dynamic>? settings,
       DateTime Function()? clock,
       Future<String> Function()? fetch,
+      Future<String> Function(String seed)? register,
       String Function()? readId,
       String Function()? readDevice,
       Future<void> Function(String)? apply})
       : _settings = settings,
         _clock = clock ?? DateTime.now,
-        _fetch = fetch ?? SzlmDuidClient.fetch,
+        _fetch = fetch,
+        _register = register,
         _readId = readId ?? (() => GStorage.szlmId),
         _readDevice = readDevice ?? (() => GStorage.xAppDevice),
         _apply = apply ?? GStorage.applySzlmId;
@@ -31,7 +33,8 @@ class SzlmIdentityService extends ChangeNotifier {
   final Box<dynamic>? _settings;
   Box<dynamic> get _box => _settings ?? GStorage.settings;
   final DateTime Function() _clock;
-  final Future<String> Function() _fetch;
+  final Future<String> Function()? _fetch;
+  final Future<String> Function(String seed)? _register;
   final String Function() _readId, _readDevice;
   final Future<void> Function(String) _apply;
   Future<String>? _running;
@@ -53,7 +56,8 @@ class SzlmIdentityService extends ChangeNotifier {
     void include(int milliseconds, Duration interval) {
       final candidate =
           DateTime.fromMillisecondsSinceEpoch(milliseconds).add(interval);
-      if (candidate.isAfter(now) && (next == null || candidate.isAfter(next!))) {
+      if (candidate.isAfter(now) &&
+          (next == null || candidate.isAfter(next!))) {
         next = candidate;
       }
     }
@@ -106,7 +110,7 @@ class SzlmIdentityService extends ChangeNotifier {
     // Persist before contacting the service. A failed save must not register.
     await _box.put(_attemptsKey, _attemptsInMemory!);
     await _box.flush();
-    final id = OfficialDeviceIdentity.parse('ShuzlmID: ${await _fetch()}');
+    final id = OfficialDeviceIdentity.parse('ShuzlmID: ${await _acquire()}');
     // A result superseded by a manual import still consumed a registration.
     _successInMemory = _clock().millisecondsSinceEpoch;
     await _box.put(_successKey, _successInMemory);
@@ -116,5 +120,29 @@ class SzlmIdentityService extends ChangeNotifier {
     }
     await _apply(id);
     return id;
+  }
+
+  Future<String> _acquire() async {
+    final fetch = _fetch;
+    if (fetch != null) return fetch();
+    const seedKey = 'szlmReportSeed';
+    final stored = _box.get(seedKey);
+    if (stored != null &&
+        (stored is! String || !RegExp(r'^[0-9a-f]{32}$').hasMatch(stored))) {
+      throw const SzlmDuidException('本机设备报文配置无法读取，请使用手动导入');
+    }
+    final seed = stored as String? ?? SzlmDuidClient.createSeed();
+    if (stored == null) {
+      await _box.put(seedKey, seed);
+      await _box.flush();
+    }
+    final register = _register;
+    if (register != null) return register(seed);
+    return SzlmDuidClient.fetch(
+        seed: seed,
+        manufacturer: GStorage.manufacturer,
+        model: GStorage.model,
+        androidVersion: GStorage.androidVersion,
+        sdkInt: int.tryParse(GStorage.sdkInt) ?? 33);
   }
 }

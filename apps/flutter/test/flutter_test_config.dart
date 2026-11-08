@@ -8,7 +8,8 @@ class _OfflineRegistration extends HttpOverrides {
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
       ..connectionFactory = (uri, proxyHost, proxyPort) {
-        if (uri.host == 'auni.telecome.cn') {
+        if (uri.host == 'auni.telecome.cn' ||
+            uri.host == 'global-auni.checktrustworthiness.com') {
           throw const SocketException(
               'Identity registration is offline in tests');
         }

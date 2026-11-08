@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import '../components/footer.dart';
 import 'adaptive_card_list.dart';
 import 'content_filter_gate.dart';
+import 'feed_navigation.dart';
 import '../components/item_card.dart';
 import '../logic/model/feed/datum.dart';
 import '../logic/state/loading_state.dart';
@@ -182,7 +183,7 @@ Widget buildBody(
         }.contains(dataList[index].entityType),
         itemBuilder: (_, index) {
           if (itemBuilder != null) return itemBuilder(dataList[index]);
-          return itemCard(
+          final card = itemCard(
             dataList[index],
             isHomeCard: isHomeCard,
             uid: uid,
@@ -194,6 +195,23 @@ Widget buildBody(
             onLike: commonController.onLike,
             onPM: commonController.onPM,
           );
+          if (dataList[index].entityType == 'card' &&
+              const {
+                'imageCarouselCard_1',
+                'iconLinkGridCard',
+                'iconMiniScrollCard',
+                'iconMiniGridCard',
+                'imageSquareScrollCard',
+                'titleCard',
+                'iconScrollCard',
+                'imageTextScrollCard',
+              }.contains(dataList[index].entityTemplate)) {
+            return Offstage(
+              offstage: FeedNavigation.compactOf(context ?? Get.context!),
+              child: card,
+            );
+          }
+          return card;
         },
         footer: Builder(builder: (_) {
           if (!commonController.isEnd &&

@@ -106,13 +106,59 @@ void main() {
   });
 
   testWidgets(
-      'a tablet prioritizes centered reading when both panes do not fit',
+      '1164dp tablet landscape keeps the feed beside the article with a rail',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1164, 777);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(MaterialApp(
+      home: Row(children: [
+        const SizedBox(width: 144),
+        Expanded(
+            child: AdaptiveReadingPane(
+          leadingInset: 144,
+          detailBuilder: (_, id, close) =>
+              const Material(key: ValueKey('tablet-detail'), child: Text('正文')),
+          child: Material(
+              child: Builder(
+                  builder: (context) => ListView(
+                        children: [
+                          TextButton(
+                              onPressed: () =>
+                                  FeedNavigation.open(context, '1'),
+                              child: const Text('打开动态')),
+                          const Text('信息流'),
+                        ],
+                      ))),
+        )),
+      ]),
+    ));
+    await tester.tap(find.text('打开动态'));
+    await tester.pumpAndSettle();
+    final detail = tester.getRect(find.byKey(const ValueKey('tablet-detail')));
+    expect(find.text('信息流').hitTestable(), findsOneWidget);
+    expect(tester.getRect(find.text('信息流')).left, greaterThan(detail.right));
+    expect(detail.width, greaterThanOrEqualTo(390));
+    await tester.tap(find.byTooltip('收起信息流'));
+    await tester.pumpAndSettle();
+    tester.view.physicalSize = const Size(1600, 900);
+    await tester.pumpAndSettle();
+    expect(find.text('信息流').hitTestable(), findsNothing);
+    await tester.tap(find.byTooltip('显示信息流'));
+    await tester.pumpAndSettle();
+    expect(find.text('信息流').hitTestable(), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+      'tablet reading fits both panes and falls back when the window narrows',
       (tester) async {
     await open(tester, width: 800);
     final detail = tester.getRect(find.byKey(const ValueKey('detail-0')));
-    expect(detail.center.dx, closeTo(400, 1));
-    expect(detail.width, inInclusiveRange(640, 720));
-    expect(find.text('动态 1').hitTestable(), findsNothing);
+    expect(detail.width, 520);
+    expect(find.text('动态 1').hitTestable(), findsOneWidget);
     tester.view.physicalSize = const Size(400, 800);
     await tester.pumpAndSettle();
     expect(tester.getRect(find.byKey(const ValueKey('detail-0'))).width, 400);

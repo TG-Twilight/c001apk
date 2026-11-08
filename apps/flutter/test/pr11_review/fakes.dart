@@ -48,11 +48,13 @@ class FakeRequest implements HttpClientRequest {
   @override
   set contentLength(int value) {}
   @override
+  set followRedirects(bool value) {}
+  @override
   void add(List<int> data) {}
   @override
   Future<HttpClientResponse> close() async {
     final id = await owner.result();
-    final plain = utf8.encode(jsonEncode({'n_a': id}));
+    final plain = utf8.encode(jsonEncode({'err': '0', 'n_a': id}));
     final key =
         utf8.encode(r'xp7j@&!v5]2k#+3z{n9$q^r%[8f1*d4e:c>0l?m/6)yb-=w}');
     return FakeResponse(
@@ -66,6 +68,8 @@ class FakeRequest implements HttpClientRequest {
 class FakeResponse extends Stream<List<int>> implements HttpClientResponse {
   FakeResponse(this.bytes);
   final List<int> bytes;
+  @override
+  int get statusCode => HttpStatus.ok;
   @override
   StreamSubscription<List<int>> listen(void Function(List<int>)? onData,
           {Function? onError, void Function()? onDone, bool? cancelOnError}) =>

@@ -15,6 +15,7 @@ Widget feedArticleBody(
   FeedArticle data,
   List<String> picArr, {
   bool forcePlain = false,
+  bool wideReading = false,
   List<FeedMedia>? mediaItems,
   String? contentId,
   MediaContentType contentType = MediaContentType.feed,
@@ -25,7 +26,7 @@ Widget feedArticleBody(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: htmlText(
           data.title.orEmpty,
-          fontSize: 17,
+          fontSize: wideReading ? 24 : 17,
           isBold: true,
           picArr: picArr,
           mediaItems: mediaItems,
@@ -43,7 +44,8 @@ Widget feedArticleBody(
           },
           child: FeedText(
             data.message.orEmpty,
-            fontSize: 16,
+            fontSize: wideReading ? 18 : 16,
+            lineHeight: wideReading ? 1.8 : 1.5,
             forcePlain: forcePlain,
             picArr: picArr,
             mediaItems: mediaItems,

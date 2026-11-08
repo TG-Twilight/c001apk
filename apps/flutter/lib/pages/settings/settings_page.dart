@@ -314,6 +314,13 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
         SettingsSection.privacy => [
             const ExpressiveListSection(children: [
               MediaAutoLoadSettings(),
+              SwitchItem(
+                icon: Icons.hdr_off_outlined,
+                title: '我不想看HDR',
+                subtitle: '大图使用高清普通效果，实况播放和原件保存不受影响',
+                boxKey: SettingsBoxKey.disableHdr,
+                defaultValue: false,
+              ),
             ]),
             ExpressiveListSection(children: [
               ListTile(

@@ -34,16 +34,18 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
-  void onSearch(String text) async {
+  void onSearch(String text) {
     if (text.isNotEmpty) {
+      // Clear the route's remembered editor focus before opening results.
+      // Returning from a result or detail must not reopen the keyboard.
+      _focusNode.unfocus();
       _searchPageController.handleSearch(text);
-      await Get.toNamed('/searchResult', parameters: {
+      Get.toNamed('/searchResult', parameters: {
         'keyword': text,
         if (!_title.isNullOrEmpty) 'title': _title!,
         if (!_pageType.isNullOrEmpty) 'pageType': _pageType!,
         if (!_pageParam.isNullOrEmpty) 'pageParam': _pageParam!,
       });
-      _focusNode.requestFocus();
     }
   }
 

@@ -77,8 +77,10 @@ class LiquidTopBarScaffold extends StatelessWidget {
                         constraints: BoxConstraints(
                             maxWidth: compactTitle ? double.infinity : 720),
                         child: Row(children: [
-                          Expanded(
+                          Flexible(
+                            fit: compactTitle ? FlexFit.tight : FlexFit.loose,
                             child: Align(
+                                widthFactor: compactTitle ? null : 1,
                                 alignment: Alignment.centerLeft,
                                 child: SizedBox(
                                   key: const ValueKey('glass-top-title'),

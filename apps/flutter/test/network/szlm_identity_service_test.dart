@@ -65,6 +65,46 @@ void main() {
     await current.beforeRequest();
     expect(calls, 0);
   });
+  test('protocol seed is durable across failed attempts and restart', () async {
+    final seeds = <String>[];
+    SzlmIdentityService seeded({Box<dynamic>? storage}) => SzlmIdentityService(
+        settings: storage ?? box,
+        clock: () => now,
+        register: (seed) async {
+          seeds.add(seed);
+          throw const SzlmDuidException('合成断网');
+        },
+        readId: () => id,
+        readDevice: () => 'synthetic-device-$id',
+        apply: (value) async {
+          id = value;
+        });
+    await expectLater(seeded().renewNow(), throwsA(isA<SzlmDuidException>()));
+    now = now.add(const Duration(minutes: 5));
+    await expectLater(seeded().renewNow(), throwsA(isA<SzlmDuidException>()));
+    expect(seeds, hasLength(2));
+    expect(seeds[0], matches(RegExp(r'^[0-9a-f]{32}$')));
+    expect(seeds[0], seeds[1]);
+    expect(id, 'DUsyntheticEXISTING123456789');
+  });
+  test('seed persistence failure prevents registration', () async {
+    var registrations = 0;
+    final current = SzlmIdentityService(
+        settings: _FailingIdentityBox(box, 'szlmReportSeed'),
+        clock: () => now,
+        register: (_) async {
+          registrations++;
+          return 'DUsyntheticNEW1234567890123';
+        },
+        readId: () => id,
+        readDevice: () => 'synthetic-device-$id',
+        apply: (value) async {
+          id = value;
+        });
+    await expectLater(current.renewNow(), throwsStateError);
+    expect(registrations, 0);
+    expect(id, 'DUsyntheticEXISTING123456789');
+  });
   test('successful acquisition persists a seven day boundary across restart',
       () async {
     await service().renewNow();
