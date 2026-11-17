@@ -95,15 +95,31 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // Saving writes Hive on real IO; wait for the save's own notification
+  // instead of a fixed delay so slower CI runners do not race the assertion.
+  Future<void> tapAndAwaitSave(WidgetTester tester, Finder finder) async {
+    final saved = Completer<void>();
+    void changed() {
+      if (!saved.isCompleted) saved.complete();
+    }
+
+    state.addListener(changed);
+    try {
+      await tester.runAsync(() async {
+        await tester.tap(finder);
+        await saved.future.timeout(const Duration(seconds: 5));
+      });
+    } finally {
+      state.removeListener(changed);
+    }
+  }
+
   Future<void> tap(WidgetTester tester, Finder finder,
       {bool persist = false}) async {
     await tester.ensureVisible(finder);
     await tester.pumpAndSettle();
     if (persist) {
-      await tester.runAsync(() async {
-        await tester.tap(finder);
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-      });
+      await tapAndAwaitSave(tester, finder);
     } else {
       await tester.tap(finder);
     }
@@ -281,10 +297,8 @@ void main() {
         await next(tester);
         await next(tester);
         await next(tester);
-        await tester.runAsync(() async {
-          await tester.tap(find.byKey(const ValueKey('onboarding-next')));
-          await Future<void>.delayed(const Duration(milliseconds: 50));
-        });
+        await tapAndAwaitSave(
+            tester, find.byKey(const ValueKey('onboarding-next')));
       } else {
         await tester.tap(find.text('取消'));
       }
