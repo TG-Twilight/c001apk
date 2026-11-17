@@ -95,20 +95,26 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  // Saving writes Hive on real IO; wait for the save's own notification
-  // instead of a fixed delay so slower CI runners do not race the assertion.
+  // Saving mixes real Hive IO with frame-driven work. Alternate real waits
+  // and frames until the save's own notification instead of relying on a
+  // fixed delay, so slower CI runners do not race the assertions.
   Future<void> tapAndAwaitSave(WidgetTester tester, Finder finder) async {
-    final saved = Completer<void>();
-    void changed() {
-      if (!saved.isCompleted) saved.complete();
-    }
+    var saved = false;
+    void changed() => saved = true;
 
     state.addListener(changed);
     try {
       await tester.runAsync(() async {
         await tester.tap(finder);
-        await saved.future.timeout(const Duration(seconds: 5));
+        await Future<void>.delayed(const Duration(milliseconds: 50));
       });
+      for (var i = 0; i < 100 && !saved; i++) {
+        await tester.pump();
+        if (saved) break;
+        await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      }
+      expect(saved, isTrue, reason: 'onboarding save did not complete');
     } finally {
       state.removeListener(changed);
     }
