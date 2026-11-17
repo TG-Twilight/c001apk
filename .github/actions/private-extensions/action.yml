@@ -1,5 +1,5 @@
 name: Assemble official extensions
-description: Assemble a pinned private implementation for trusted main builds
+description: Assemble a pinned private implementation for trusted main/test builds
 inputs:
   private-key:
     description: Read-only deploy key for the private implementation repository

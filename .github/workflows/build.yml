@@ -2,7 +2,8 @@ name: Build
 
 on:
   push:
-    branches: [main]
+    # `test` is the owner's cloud test branch: official build, release arm64 APK and Windows only.
+    branches: [main, test]
     paths:
       - 'apps/flutter/**'
       - '.github/workflows/**'
@@ -39,7 +40,10 @@ concurrency:
 
 env:
   FLUTTER_VERSION: '3.47.7'
-  USE_PRIVATE_EXTENSIONS: ${{ github.repository == 'TG-Twilight/c001apk' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || inputs.implementation != 'public') }}
+  # Private implementation is only assembled for pushes/manual runs of main or test in the official repository, never pull requests.
+  USE_PRIVATE_EXTENSIONS: ${{ github.repository == 'TG-Twilight/c001apk' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/test') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (github.event_name != 'workflow_dispatch' || inputs.implementation != 'public') }}
+  TEST_BRANCH: ${{ github.ref == 'refs/heads/test' }}
+  ARTIFACT_RETENTION_DAYS: ${{ github.ref == 'refs/heads/test' && 3 || 14 }}
 
 defaults:
   run:
@@ -57,8 +61,8 @@ jobs:
         with:
           persist-credentials: false
       - name: Validate official build branch
-        if: github.repository == 'TG-Twilight/c001apk' && github.event_name == 'workflow_dispatch' && inputs.implementation != 'public' && github.ref != 'refs/heads/main'
-        run: echo 'Official implementation builds require the main branch'; exit 1
+        if: github.repository == 'TG-Twilight/c001apk' && github.event_name == 'workflow_dispatch' && inputs.implementation != 'public' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/test'
+        run: echo 'Official implementation builds require the main or test branch'; exit 1
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -84,11 +88,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - platform: windows
-            runner: windows-2022
-          - platform: linux
-            runner: ubuntu-22.04
+        # The test branch only needs Windows; main and manual runs keep Linux.
+        include: ${{ fromJSON(github.ref == 'refs/heads/test' && '[{"platform":"windows","runner":"windows-2022"}]' || '[{"platform":"windows","runner":"windows-2022"},{"platform":"linux","runner":"ubuntu-22.04"}]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 35
     steps:
@@ -153,89 +154,12 @@ jobs:
           name: c001apk-${{ matrix.platform }}-x86_64-release
           path: apps/flutter/build/distribution/*
           if-no-files-found: error
-          retention-days: 14
-
-  android-debug:
-    name: Android debug (project certificate)
-    # Pull requests skip Android signing; never expose signing Secrets to PR code.
-    if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || !inputs.android_release)
-    needs: checks
-    runs-on: ubuntu-22.04
-    timeout-minutes: 35
-    env:
-      KEY_ALIAS: '秋风のとおり道'
-      EXPECTED_CERT_SHA256: 'EA385AFC82E19824EEA8A8868ED365DF03E9886BBBA33E47E1E04B43EC65CB67'
-    steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          persist-credentials: false
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6
-        with:
-          distribution: temurin
-          java-version: '17'
-      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
-        with:
-          cmdline-tools-version: '12266719'
-          log-accepted-android-sdk-licenses: false
-          packages: 'platform-tools'
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-      - name: Select JDK and install Android SDK packages
-        run: |
-          flutter config --jdk-dir="$JAVA_HOME"
-          sdkmanager 'platforms;android-37.0' 'build-tools;37.0.0' 'ndk;28.2.13676358'
-      - name: Sync build date
-        run: dart tool/update_build_date.dart ${{ needs.checks.outputs.build_date }}
-      - run: flutter pub get --enforce-lockfile
-      - name: Assemble official implementation
-        if: env.USE_PRIVATE_EXTENSIONS == 'true'
-        uses: ./.github/actions/private-extensions
-        with:
-          private-key: ${{ secrets.PRIVATE_EXTENSIONS_DEPLOY_KEY }}
-      - name: Restore and verify project keystore
-        env:
-          KEYSTORE: ${{ runner.temp }}/c001apk-signing/release.jks
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          REVIA_KS_PASS: ${{ secrets.REVIA_KS_PASS }}
-        run: |
-          test -n "$ANDROID_KEYSTORE_BASE64" || { echo 'Missing ANDROID_KEYSTORE_BASE64 Secret'; exit 1; }
-          test -n "$REVIA_KS_PASS" || { echo 'Missing REVIA_KS_PASS Secret'; exit 1; }
-          umask 077
-          mkdir -p "$(dirname "$KEYSTORE")"
-          printf 'KEYSTORE=%s\n' "$KEYSTORE" >> "$GITHUB_ENV"
-          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE"
-          keytool -exportcert -keystore "$KEYSTORE" -alias "$KEY_ALIAS" -storepass:env REVIA_KS_PASS -file "$RUNNER_TEMP/c001apk-signing/cert.der"
-          actual=$(sha256sum "$RUNNER_TEMP/c001apk-signing/cert.der" | cut -d ' ' -f 1 | tr '[:lower:]' '[:upper:]')
-          test "$actual" = "$EXPECTED_CERT_SHA256" || { echo 'Unexpected release signing certificate'; exit 1; }
-      - name: Build project-signed debug APKs
-        env:
-          REVIA_KS_PASS: ${{ secrets.REVIA_KS_PASS }}
-        run: flutter build apk --debug --split-per-abi --no-pub
-      - name: Verify debug APK certificates
-        run: |
-          for abi in arm64-v8a armeabi-v7a x86_64; do
-            report=$("$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs "build/app/outputs/flutter-apk/app-$abi-debug.apk")
-            actual=$(printf '%s\n' "$report" | tr -d '\r' | sed -nE 's/^.*certificate SHA-256 digest: ([[:xdigit:]]{64})$/\1/p' | tr '[:lower:]' '[:upper:]' | sort -u)
-            test "$actual" = "$EXPECTED_CERT_SHA256" || { echo "Unexpected debug APK certificate: $abi"; exit 1; }
-          done
-      - name: Remove temporary signing material
-        if: always()
-        run: |
-          rm -f "$RUNNER_TEMP/c001apk-signing/release.jks" "$RUNNER_TEMP/c001apk-signing/cert.der"
-          rmdir "$RUNNER_TEMP/c001apk-signing" 2>/dev/null || true
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: c001apk-android-debug
-          path: apps/flutter/build/app/outputs/flutter-apk/*-debug.apk
-          if-no-files-found: error
-          retention-days: 7
+          retention-days: ${{ fromJSON(env.ARTIFACT_RETENTION_DAYS) }}
 
   android-release:
-    name: Android signed release (three ABIs)
-    if: github.event_name == 'workflow_dispatch' && inputs.android_release
+    # Release (AOT) only: debug APKs embed Dart kernel and must not carry the private implementation as artifacts.
+    name: Android signed release (${{ github.ref == 'refs/heads/test' && 'arm64-v8a' || 'three ABIs' }})
+    if: (github.event_name == 'workflow_dispatch' && inputs.android_release) || (github.event_name == 'push' && github.ref == 'refs/heads/test')
     needs: checks
     runs-on: ubuntu-22.04
     timeout-minutes: 35
@@ -292,13 +216,19 @@ jobs:
           REVIA_KS_PASS: ${{ secrets.REVIA_KS_PASS }}
         # Release-mode plugin registration must exclude dev-only native plugins.
         run: |
-          flutter build apk --release --split-per-abi
+          if [ "$TEST_BRANCH" = 'true' ]; then
+            flutter build apk --release --split-per-abi --target-platform android-arm64
+          else
+            flutter build apk --release --split-per-abi
+          fi
           git diff --exit-code -- pubspec.lock
       - name: Verify APK signatures and package each ABI
         run: |
           version=$(sed -n 's/^version: //p' pubspec.yaml | tr -d '\r')
           mkdir -p build/distribution
-          for abi in arm64-v8a armeabi-v7a x86_64; do
+          abis='arm64-v8a armeabi-v7a x86_64'
+          if [ "$TEST_BRANCH" = 'true' ]; then abis='arm64-v8a'; fi
+          for abi in $abis; do
             apk="build/app/outputs/flutter-apk/app-$abi-release.apk"
             report=$("$ANDROID_HOME/build-tools/37.0.0/apksigner" verify --print-certs "$apk")
             actual=$(printf '%s\n' "$report" | tr -d '\r' | sed -nE 's/^.*certificate SHA-256 digest: ([[:xdigit:]]{64})$/\1/p' | tr '[:lower:]' '[:upper:]' | sort -u)
@@ -329,28 +259,30 @@ jobs:
           name: c001apk-android-arm64-v8a-release
           path: apps/flutter/build/distribution/*-arm64-v8a.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ fromJSON(env.ARTIFACT_RETENTION_DAYS) }}
       - name: Upload armeabi-v7a APK
+        if: env.TEST_BRANCH != 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: c001apk-android-armeabi-v7a-release
           path: apps/flutter/build/distribution/*-armeabi-v7a.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ fromJSON(env.ARTIFACT_RETENTION_DAYS) }}
       - name: Upload x86_64 APK
+        if: env.TEST_BRANCH != 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: c001apk-android-x86_64-release
           path: apps/flutter/build/distribution/*-x86_64.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ fromJSON(env.ARTIFACT_RETENTION_DAYS) }}
       - name: Upload APK checksums
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: c001apk-android-release-checksums
           path: apps/flutter/build/distribution/SHA256SUMS.txt
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ fromJSON(env.ARTIFACT_RETENTION_DAYS) }}
 
   ios:
     name: iOS arm64 unsigned IPA
@@ -401,4 +333,4 @@ jobs:
             apps/flutter/build/distribution/*-ios-arm64-unsigned.ipa
             apps/flutter/build/distribution/SHA256SUMS.txt
           if-no-files-found: error
-          retention-days: 14
+          retention-days: ${{ fromJSON(env.ARTIFACT_RETENTION_DAYS) }}

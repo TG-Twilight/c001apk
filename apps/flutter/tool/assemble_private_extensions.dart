@@ -100,9 +100,10 @@ Future<void> assemble(List<String> arguments) async {
         Platform.environment['GITHUB_REPOSITORY'] != 'TG-Twilight/c001apk' ||
         !{'push', 'workflow_dispatch'}
             .contains(Platform.environment['GITHUB_EVENT_NAME']) ||
-        Platform.environment['GITHUB_REF'] != 'refs/heads/main') {
+        !{'refs/heads/main', 'refs/heads/test'}
+            .contains(Platform.environment['GITHUB_REF'])) {
       throw StateError(
-          'In-place assembly is restricted to trusted main Actions builds');
+          'In-place assembly is restricted to trusted main/test Actions builds');
     }
     destination = root;
   } else {
