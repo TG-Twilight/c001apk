@@ -195,7 +195,7 @@ void main() {
         .position;
     detail().jumpTo(90);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('浏览与隐私'));
+    await tester.tap(find.text('阅读与评论'));
     await tester.pumpAndSettle();
     expect(detail().pixels, 0);
     await tester.tap(find.text('外观与导航').first);
