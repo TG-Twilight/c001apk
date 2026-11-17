@@ -370,6 +370,10 @@ class GStorage {
     settings.put(SettingsBoxKey.showEmoji, value);
   }
 
+  static bool get foldCoinReplies {
+    return settings.get(SettingsBoxKey.foldCoinReplies, defaultValue: false);
+  }
+
   static bool get checkUpdate {
     return settings.get(SettingsBoxKey.checkUpdate, defaultValue: true);
   }
@@ -569,6 +573,7 @@ class SettingsBoxKey {
       showSquare = 'showSquare',
       recordHistory = 'recordHistory',
       showEmoji = 'showEmoji',
+      foldCoinReplies = 'foldCoinReplies',
       checkUpdate = 'checkUpdate',
       checkCount = 'checkCount',
       installTime = 'installTime',

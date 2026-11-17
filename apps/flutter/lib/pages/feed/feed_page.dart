@@ -28,6 +28,7 @@ import '../../pages/feed/feed_controller.dart';
 import '../../pages/feed/reply/reply_dialog.dart' show ReplyType;
 import '../../pages/feed/reply/reply_page.dart';
 import '../settings/device_identity_page.dart';
+import '../../utils/coin_reply.dart';
 import '../../utils/device_util.dart';
 import '../../utils/extensions.dart';
 import '../../utils/global_data.dart';
@@ -586,6 +587,53 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildCoinFoldBar(int count, bool expanded) {
+    final colors = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => _feedController.showCoinReplies.value = !expanded,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(children: [
+          Icon(expanded ? Icons.unfold_less : Icons.unfold_more,
+              size: 18, color: colors.outline),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              expanded ? '已展开 $count 条酷币评论' : '已折叠 $count 条酷币评论',
+              style: TextStyle(color: colors.outline),
+            ),
+          ),
+          Text(expanded ? '收起' : '展开',
+              style: TextStyle(color: colors.primary)),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _onToggleReplyTop(Datum reply) async {
+    final current = _feedController.topReply;
+    if (current != null && current.id != reply.id) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: const Text('已经存在置顶评论，是否用当前评论替换旧的置顶评论？'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('确定'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    await _feedController.toggleReplyTop(reply);
+  }
+
   Widget _buildFeedReply(LoadingState replyState) {
     if (_feedController.repliesDeferred.value && replyState is! Success) {
       return SliverToBoxAdapter(child: _buildDeferredReplyPrompt(replyState));
@@ -616,12 +664,32 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
         );
       case Success():
         List<Datum> dataList = replyState.response;
+        int coinReplies = 0;
+        final showCoinReplies = _feedController.showCoinReplies.value;
+        if (GStorage.foldCoinReplies) {
+          final kept = <Datum>[];
+          for (final reply in dataList) {
+            if (!_feedController.isPinnedReply(reply) &&
+                isCoinOnlyReply(reply)) {
+              coinReplies++;
+              if (showCoinReplies) kept.add(reply);
+            } else {
+              kept.add(reply);
+            }
+          }
+          dataList = kept;
+        }
+        final headerCount = coinReplies > 0 ? 1 : 0;
         return SliverPadding(
           padding:
               EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
           sliver: SliverList.separated(
-            itemCount: dataList.length + 1,
-            itemBuilder: (_, index) {
+            itemCount: dataList.length + headerCount + 1,
+            itemBuilder: (_, position) {
+              if (position < headerCount) {
+                return _buildCoinFoldBar(coinReplies, showCoinReplies);
+              }
+              final index = position - headerCount;
               if (index == dataList.length) {
                 if (!_feedController.repliesDeferred.value &&
                     !_feedController.isEnd &&
@@ -646,11 +714,15 @@ class _FeedPageState extends State<FeedPage> with TickerProviderStateMixin {
                         ),
                 );
               } else {
+                final reply = dataList[index];
+                final isFeedAuthor = GlobalData().isLogin &&
+                    _feedController.feedUid != null &&
+                    GlobalData().uid == '${_feedController.feedUid}';
                 return FeedReplyCard(
-                  data: dataList[index],
-                  isTopReply: _feedController.topReply != null &&
-                      index == 0 &&
-                      _feedController.listType == 'lastupdate_desc',
+                  data: reply,
+                  isTopReply: _feedController.isPinnedReply(reply),
+                  isPinned: _feedController.topReply?.id == reply.id,
+                  onToggleTop: isFeedAuthor ? _onToggleReplyTop : null,
                   onBlock: _feedController.onBlockReply,
                   onReply: (id, uname, fid) {
                     if (GlobalData().isLogin) {

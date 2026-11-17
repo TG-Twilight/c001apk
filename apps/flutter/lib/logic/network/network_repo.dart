@@ -131,6 +131,26 @@ class NetworkRepo {
     );
   }
 
+  /// Feed author pins or unpins one top-level reply. Mirrors the official
+  /// client: form-encoded POST, replyId+feedId to pin, feedId alone to unpin
+  /// (a feed holds at most one pinned reply).
+  static Future<Response> postReplyTop({
+    required String feedId,
+    dynamic replyId,
+  }) {
+    final pin = replyId != null;
+    return Request().post(
+      Api.getDataFromUrl(pin
+          ? '/v6/feed/addReplyTopToFeed'
+          : '/v6/feed/cancelReplyTopFromFeed'),
+      data: {
+        if (pin) 'replyId': '$replyId',
+        'feedId': feedId,
+      },
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
+  }
+
   static Future<Response> postLikeDeleteFollow(
     String url, {
     dynamic id,

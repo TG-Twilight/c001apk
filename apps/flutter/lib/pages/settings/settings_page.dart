@@ -44,9 +44,13 @@ enum ImageQuality {
 }
 
 enum SettingsSection {
-  appearance('外观与字号', '动态取色、主题、深色模式与字体大小', Icons.palette_outlined),
-  content('关注与内容', '本地关注、悄悄关注、账号关注与表情', Icons.feed_outlined),
-  privacy('浏览与隐私', '图片加载、黑名单、浏览历史与外部链接', Icons.privacy_tip_outlined),
+  appearance('外观与导航', '动态取色、主题、深色模式、悬浮控件与发布入口',
+      Icons.palette_outlined),
+  reading('阅读与评论', '分栏阅读、字体大小、表情与评论折叠', Icons.chrome_reader_mode_outlined),
+  media('图片与媒体', '实况图片自动加载与 HDR 显示', Icons.photo_library_outlined),
+  follow('关注', '本地关注、悄悄关注与名单管理', Icons.person_add_alt_outlined),
+  filter('内容屏蔽', '内容过滤、用户与话题黑名单', Icons.filter_alt_outlined),
+  privacy('浏览与隐私', '浏览历史与外部链接', Icons.privacy_tip_outlined),
   storage('存储与更新', '图片缓存、版本与更新检查', Icons.storage_outlined),
   protocol('协议与设备', '设备标识与客户端请求参数', Icons.developer_mode);
 
@@ -221,6 +225,11 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
                 ],
                 forceAppUpdate: true,
               ),
+            ]),
+            const ItemTitle(title: '导航栏'),
+            const NavigationAppearanceSettings(),
+            const ItemTitle(title: '主页'),
+            ExpressiveListSection(children: [
               ValueListenableBuilder(
                 valueListenable: GStorage.settings
                     .listenable(keys: [SettingsBoxKey.hideHomePublishButton]),
@@ -239,9 +248,36 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
                 ),
               ),
             ]),
-            const ItemTitle(title: '导航栏'),
-            const NavigationAppearanceSettings(),
-            const ItemTitle(title: '阅读与字号'),
+          ],
+        SettingsSection.follow => [
+            ValueListenableBuilder(
+              valueListenable:
+                  GStorage.settings.listenable(keys: [SettingsBoxKey.isLogin]),
+              builder: (context, _, __) => ExpressiveListSection(children: [
+                if (GlobalData().isLogin)
+                  const SwitchItem(
+                    icon: Icons.visibility_off_outlined,
+                    title: '悄悄关注',
+                    subtitle: '开启后，长按用户主页的关注按钮添加或取消。仅保存在本机，不会同步到账号',
+                    boxKey: LocalFollowStore.enabledKey,
+                    defaultValue: false,
+                  )
+                else
+                  const ListTile(
+                    leading: Icon(Icons.person_add_alt_outlined),
+                    title: Text('本地关注'),
+                    subtitle: Text('游客可在用户主页直接关注，并在底栏“关注”查看内容。名单仅保存在本机'),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.manage_accounts_outlined),
+                  title: Text('管理$localFollowLabel'),
+                  subtitle: const Text('查看本机关注名单、进入用户主页或取消关注'),
+                  onTap: () => Get.to(() => const LocalFollowListPage()),
+                ),
+              ]),
+            ),
+          ],
+        SettingsSection.reading => [
             const ExpressiveListSection(children: [
               DropDownMenuItem(
                 icon: Icons.vertical_split_outlined,
@@ -273,34 +309,6 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
                 ),
               ),
             ]),
-          ],
-        SettingsSection.content => [
-            ValueListenableBuilder(
-              valueListenable:
-                  GStorage.settings.listenable(keys: [SettingsBoxKey.isLogin]),
-              builder: (context, _, __) => ExpressiveListSection(children: [
-                if (GlobalData().isLogin)
-                  const SwitchItem(
-                    icon: Icons.visibility_off_outlined,
-                    title: '悄悄关注',
-                    subtitle: '开启后，长按用户主页的关注按钮添加或取消。仅保存在本机，不会同步到账号',
-                    boxKey: LocalFollowStore.enabledKey,
-                    defaultValue: false,
-                  )
-                else
-                  const ListTile(
-                    leading: Icon(Icons.person_add_alt_outlined),
-                    title: Text('本地关注'),
-                    subtitle: Text('游客可在用户主页直接关注，并在底栏“关注”查看内容。名单仅保存在本机'),
-                  ),
-                ListTile(
-                  leading: const Icon(Icons.manage_accounts_outlined),
-                  title: Text('管理$localFollowLabel'),
-                  subtitle: const Text('查看本机关注名单、进入用户主页或取消关注'),
-                  onTap: () => Get.to(() => const LocalFollowListPage()),
-                ),
-              ]),
-            ),
             const ExpressiveListSection(children: [
               SwitchItem(
                 icon: Icons.emoji_emotions_outlined,
@@ -308,10 +316,17 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
                 subtitle: '将内容中的酷安表情标记显示为图片',
                 boxKey: SettingsBoxKey.showEmoji,
                 defaultValue: true,
-              )
+              ),
+              SwitchItem(
+                icon: Icons.unfold_less,
+                title: '自动折叠酷币评论',
+                subtitle: '只含酷币表情的评论收起到评论区顶部，可随时展开',
+                boxKey: SettingsBoxKey.foldCoinReplies,
+                defaultValue: false,
+              ),
             ]),
           ],
-        SettingsSection.privacy => [
+        SettingsSection.media => [
             const ExpressiveListSection(children: [
               MediaAutoLoadSettings(),
               SwitchItem(
@@ -322,6 +337,8 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
                 defaultValue: false,
               ),
             ]),
+          ],
+        SettingsSection.filter => [
             ExpressiveListSection(children: [
               ListTile(
                 title: const Text('屏蔽傻逼内容'),
@@ -350,6 +367,8 @@ class _SettingsDetailPageState extends State<SettingsDetailPage> {
                 ),
               ),
             ]),
+          ],
+        SettingsSection.privacy => [
             const ExpressiveListSection(children: [
               SwitchItem(
                 icon: Icons.history,

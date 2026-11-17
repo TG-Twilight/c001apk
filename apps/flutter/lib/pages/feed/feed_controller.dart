@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 import '../../logic/model/fav_history/fav_history.dart';
@@ -35,6 +36,10 @@ class FeedController extends CommonController {
 
   Datum? topReply;
   Datum? _replyMe;
+
+  /// Coin-only replies stay folded until the reader expands them on this page.
+  final showCoinReplies = false.obs;
+  bool _updatingReplyTop = false;
 
   Rx<LoadingState> feedState = LoadingState.loading().obs;
   final accountDetailNotice = ''.obs;
@@ -211,6 +216,43 @@ class FeedController extends CommonController {
       item.entityType ??= 'feed_reply';
     }
     return filterList;
+  }
+
+  bool isPinnedReply(Datum reply) =>
+      listType == 'lastupdate_desc' &&
+      topReply != null &&
+      topReply!.id == reply.id;
+
+  /// Pins [reply] (or unpins it when already pinned). The server keeps one
+  /// pinned reply per feed, so pinning replaces any previous one.
+  Future<void> toggleReplyTop(Datum reply) async {
+    if (_updatingReplyTop) return;
+    _updatingReplyTop = true;
+    final cancel = topReply?.id == reply.id;
+    try {
+      final response = await NetworkRepo.postReplyTop(
+          feedId: id, replyId: cancel ? null : reply.id);
+      final body = readApiObject(response, allowSuccessWithoutData: true);
+      List<Datum> replyList = [...rawItems];
+      if (cancel) {
+        topReply = null;
+      } else {
+        topReply = reply;
+        replyList = replyList.where((item) => item.id != reply.id).toList();
+        if (listType == 'lastupdate_desc') replyList.insert(0, reply);
+      }
+      publishItems(replyList);
+      final receipt = body['data'];
+      SmartDialog.showToast(receipt is String && receipt.trim().isNotEmpty
+          ? receipt
+          : cancel
+              ? '已取消置顶'
+              : '已置顶');
+    } catch (e) {
+      SmartDialog.showToast(ApiFailure.fromError(e).message);
+    } finally {
+      _updatingReplyTop = false;
+    }
   }
 
   void updateReply(bool isReply, Datum data, dynamic id, dynamic fid) {

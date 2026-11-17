@@ -30,6 +30,8 @@ class FeedReplyCard extends StatelessWidget {
     this.onReply,
     this.onDelete,
     this.onLike,
+    this.onToggleTop,
+    this.isPinned,
   });
 
   final Datum data;
@@ -40,6 +42,12 @@ class FeedReplyCard extends StatelessWidget {
   final Function(dynamic id, dynamic uname, dynamic fid)? onReply;
   final Function(dynamic id, dynamic fid)? onDelete;
   final Function(dynamic id, dynamic like)? onLike;
+
+  /// Feed author only: pins or unpins this top-level reply.
+  final Future<void> Function(Datum reply)? onToggleTop;
+
+  /// Whether the server currently pins this reply, independent of sort order.
+  final bool? isPinned;
 
   @override
   Widget build(BuildContext context) => ContentFilterGate(
@@ -98,6 +106,10 @@ class FeedReplyCard extends StatelessWidget {
                                 : null,
                             onDelete: onDelete != null
                                 ? () => onDelete!(data.id, null)
+                                : null,
+                            isTop: isPinned ?? isTopReply,
+                            onToggleTop: !isReply2Reply && onToggleTop != null
+                                ? () => onToggleTop!(data)
                                 : null,
                           );
                         },
@@ -438,7 +450,7 @@ class FeedReplyCard extends StatelessWidget {
   }
 }
 
-enum PanelAction { copy, block, delete, report, showReply }
+enum PanelAction { copy, block, delete, report, showReply, top }
 
 class _MorePanel extends StatelessWidget {
   const _MorePanel({
@@ -449,6 +461,8 @@ class _MorePanel extends StatelessWidget {
     this.reply,
     this.onBlock,
     this.onDelete,
+    this.isTop = false,
+    this.onToggleTop,
   });
 
   final dynamic id;
@@ -458,6 +472,8 @@ class _MorePanel extends StatelessWidget {
   final Datum? reply;
   final Function()? onBlock;
   final Function()? onDelete;
+  final bool isTop;
+  final Function()? onToggleTop;
 
   Future<dynamic> menuActionHandler(PanelAction type,
       {BuildContext? context, dynamic rid, dynamic frid}) async {
@@ -478,6 +494,10 @@ class _MorePanel extends StatelessWidget {
         if (onDelete != null) {
           onDelete!();
         }
+        break;
+      case PanelAction.top:
+        Get.back();
+        onToggleTop?.call();
         break;
       case PanelAction.report:
         Get.back();
@@ -532,6 +552,16 @@ class _MorePanel extends StatelessWidget {
               minLeadingWidth: 0,
               leading: const Icon(Icons.copy, size: 19),
               title: Text('复制', style: Theme.of(context).textTheme.titleSmall),
+            ),
+          if (onToggleTop != null)
+            ListTile(
+              onTap: () async => await menuActionHandler(PanelAction.top),
+              minLeadingWidth: 0,
+              leading: Icon(
+                  isTop ? Icons.vertical_align_bottom : Icons.vertical_align_top,
+                  size: 19),
+              title: Text(isTop ? '取消置顶' : '置顶',
+                  style: Theme.of(context).textTheme.titleSmall),
             ),
           ListTile(
             onTap: () async => await menuActionHandler(PanelAction.block),

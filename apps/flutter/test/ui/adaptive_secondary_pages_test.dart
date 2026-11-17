@@ -150,7 +150,7 @@ void main() {
     await tester.pumpWidget(app(const SettingsPage(), scale: 1.5));
     await tester.pumpAndSettle();
     expect(find.text('分栏阅读'), findsNothing);
-    await tester.tap(find.text('外观与字号'));
+    await tester.tap(find.text('阅读与评论'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('分栏阅读'), 200,
         scrollable: find.descendant(
@@ -176,7 +176,7 @@ void main() {
     expect(position(0).pixels, greaterThan(0));
     expect(position(1).pixels, 0);
     final categoryOffset = position(0).pixels;
-    await tester.tap(find.text('外观与字号').last);
+    await tester.tap(find.text('外观与导航').last);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.pumpAndSettle();
     expect(position(1).pixels, greaterThan(0));
@@ -198,7 +198,7 @@ void main() {
     await tester.tap(find.text('浏览与隐私'));
     await tester.pumpAndSettle();
     expect(detail().pixels, 0);
-    await tester.tap(find.text('外观与字号').first);
+    await tester.tap(find.text('外观与导航').first);
     await tester.pumpAndSettle();
     expect(detail().pixels, closeTo(90, 1));
     expect(tester.takeException(), isNull);
@@ -208,7 +208,7 @@ void main() {
       (tester) async {
     await resize(tester, 320, height: 800);
     await tester.pumpWidget(app(
-        const SettingsDetailPage(section: SettingsSection.appearance),
+        const SettingsDetailPage(section: SettingsSection.reading),
         scale: 2));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
