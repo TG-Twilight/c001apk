@@ -41,6 +41,7 @@ void main() {
       expect(isCoinOnlyText(' [酷币][酷币]\n[酷币5毛] '), isTrue);
       expect(isCoinOnlyText('[酷币1\$]&nbsp;[新币1分]'), isTrue);
       expect(isCoinOnlyText('<span>[酷币]</span>'), isTrue);
+      expect(isCoinOnlyText('[灰色酷币][新酷币5毛][白纹酷币]'), isTrue);
     });
     test('keep replies with any other content', () {
       expect(isCoinOnlyText(''), isFalse);

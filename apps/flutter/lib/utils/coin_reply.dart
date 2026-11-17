@@ -1,10 +1,15 @@
 import '../logic/model/feed/datum.dart';
+import 'emoji_util.dart';
 
 final _tags = RegExp(r'<[^>]*>');
 final _entities = RegExp(r'&(nbsp|#160|#xa0);', caseSensitive: false);
-// The coin family shown on the emoji panel's coin tab: [酷币], [酷币1分] ...
-// [酷币2€], plus [新币1分].
-final _coinEmoji = RegExp(r'\[(?:酷币[^\[\]\s]{0,6}|新币1分)\]');
+
+// Exactly the emoji on the composer's coin tab: every key containing 酷币
+// ([酷币5毛], [灰色酷币], [新酷币2€] ...) plus [新币1分].
+final _coinEmoji = RegExp(EmojiUtil.emojiMap.keys
+    .where((key) => key.contains('酷币') || key == '[新币1分]')
+    .map(RegExp.escape)
+    .join('|'));
 
 /// True when a reply says nothing but coin emoji: at least one coin token,
 /// otherwise only whitespace, and no pictures.
