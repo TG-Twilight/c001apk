@@ -35,12 +35,18 @@ android {
         jvmTarget = JavaVersion.VERSION_17
     }
 
+    buildFeatures {
+        resValues = true
+    }
+
     defaultConfig {
         applicationId = "app.awavenue.c001apk"
         minSdk = 24
         targetSdk = 37
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Flutter offsets split APK version codes by ABI. Keep the base value for About.
+        resValue "string", "app_build_number", flutter.versionCode.toString()
     }
 
     packagingOptions {

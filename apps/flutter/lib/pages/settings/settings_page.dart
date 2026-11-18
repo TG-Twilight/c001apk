@@ -24,6 +24,7 @@ import '../../components/settings/switch_item.dart';
 import '../../constants/constants.dart';
 import '../../pages/blacklist/black_list_page.dart' show BlackListType;
 import '../../utils/cache_util.dart';
+import '../../utils/utils.dart';
 import '../../utils/storage_util.dart';
 import '../../utils/global_data.dart';
 import '../../logic/local_follow/local_follow_store.dart';
@@ -113,9 +114,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   title: const Text('关于'),
                   onTap: () async {
                     final info = await PackageInfo.fromPlatform();
+                    final buildNumber = Platform.isAndroid
+                        ? await Utils.platform
+                            .invokeMethod<String>('getAppBuildNumber')
+                        : info.buildNumber;
                     if (mounted) {
                       Get.toNamed('/about', parameters: {
-                        'version': '${info.version}(${info.buildNumber})'
+                        'version': '${info.version}(${buildNumber ?? info.buildNumber})'
                       });
                     }
                   }),

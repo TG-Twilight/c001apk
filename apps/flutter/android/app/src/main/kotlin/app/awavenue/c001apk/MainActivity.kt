@@ -117,6 +117,8 @@ class MainActivity : FlutterFragmentActivity() {
                 // Root destinations leave back-to-home to Android itself.
                 predictiveBackCallback.isEnabled = SDK_INT >= 34 && call.arguments == true
                 result.success(null)
+            } else if (call.method == "getAppBuildNumber") {
+                result.success(getString(R.string.app_build_number))
             } else if (call.method == "getProtocolDeviceProfile") {
                 result.success(mapOf(
                     "manufacturer" to Build.MANUFACTURER,
